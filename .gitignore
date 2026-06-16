@@ -36,3 +36,9 @@ out
 nodejs_client_ts/node_modules
 nodejs_client_ts/msgStore.json
 nodejs_client_ts/dist
+
+# Build directories
+build/
+
+# Temp files
+dump.json

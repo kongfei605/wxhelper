@@ -1,10 +1,12 @@
-﻿#ifndef GLOBAL_CONTEXT_H_
+#ifndef GLOBAL_CONTEXT_H_
 #define GLOBAL_CONTEXT_H_
 #include "config.h"
 #include "http_server.h"
 #include "log.h"
 #include "singleton.h"
 #include "manager.h"
+#include "wechat_function.h"
+#include <optional>
 
 namespace wxhelper {
 

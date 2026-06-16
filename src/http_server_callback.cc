@@ -1,4 +1,4 @@
-﻿#include "pch.h"
+#include "pch.h"
 #include "http_server_callback.h"
 #include "http_server.h"
 #include "export.h"
@@ -52,8 +52,16 @@ std::wstring GetWStringParam(nlohmann::json data, std::string key) {
 
 std::vector<std::wstring> GetArrayParam(nlohmann::json data,  std::string key) {
   std::vector<std::wstring> result;
-  std::wstring param = GetWStringParam(data, key);
-  result = wxhelper::Utils::split(param, L',');
+  if (data.contains(key) && data[key].is_array()) {
+    for (auto& item : data[key]) {
+      if (item.is_string()) {
+        result.push_back(wxhelper::Utils::UTF8ToWstring(item.get<std::string>()));
+      }
+    }
+  } else {
+    std::wstring param = GetWStringParam(data, key);
+    result = wxhelper::Utils::split(param, L',');
+  }
   return result;
 }
 
@@ -89,7 +97,7 @@ void EventHandler(struct mg_connection *c, int ev, void *ev_data,
                             {"msg", "invalid url, please check url"},
                             {"data", NULL}};
       std::string ret = res.dump();
-      mg_http_reply(c, 200, "Content-Type: application/json\r\n", "%s\n",
+      mg_http_reply(c, 200, "Content-Type: application/json; charset=utf-8\r\n", "%s\n",
                     ret.c_str());
     }
   } else if (ev == MG_EV_WS_MSG) {
@@ -108,7 +116,7 @@ void HandleHttpRequest(struct mg_connection *c, void *ev_data) {
     ret = res.dump();
   }
   if (ret != "") {
-    mg_http_reply(c, 200, "Content-Type: application/json\r\n", "%s\n",
+    mg_http_reply(c, 200, "Content-Type: application/json; charset=utf-8\r\n", "%s\n",
                   ret.c_str());
   }
 }
@@ -363,10 +371,48 @@ std::string HttpDispatch(struct mg_connection *c, struct mg_http_message *hm) {
       nlohmann::json member_info = {
           {"admin", member.admin},
           {"chatRoomId", member.chat_room_id},
-          {"members", member.member},
           {"adminNickname", member.admin_nickname},
-          {"memberNickname", member.member_nickname},
       };
+
+      nlohmann::json members_array = nlohmann::json::array();
+      std::vector<std::string> wxids;
+      std::vector<std::string> nicknames;
+      std::string delim = "^G";
+
+      std::string s_wxids = member.member;
+      if (!s_wxids.empty()) {
+        size_t start = 0;
+        size_t end = s_wxids.find(delim);
+        while (end != std::string::npos) {
+          wxids.push_back(s_wxids.substr(start, end - start));
+          start = end + delim.length();
+          end = s_wxids.find(delim, start);
+        }
+        wxids.push_back(s_wxids.substr(start));
+      }
+
+      std::string s_names = member.member_nickname;
+      if (!s_names.empty()) {
+        size_t start = 0;
+        size_t end = s_names.find(delim);
+        while (end != std::string::npos) {
+          nicknames.push_back(s_names.substr(start, end - start));
+          start = end + delim.length();
+          end = s_names.find(delim, start);
+        }
+        nicknames.push_back(s_names.substr(start));
+      }
+
+      for (size_t i = 0; i < wxids.size(); i++) {
+        nlohmann::json item = {
+          {"wxid", wxids[i]},
+          {"Nickname", i < nicknames.size() ? nicknames[i] : ""}
+        };
+        members_array.push_back(item);
+      }
+
+      member_info["members"] = members_array;
+      member_info["number"] = wxids.size();
       ret_data["data"] = member_info;
     }
     ret = ret_data.dump();

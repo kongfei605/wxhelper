@@ -1,4 +1,4 @@
-﻿#include "pch.h"
+#include "pch.h"
 #include "manager.h"
 
 #include "export.h"
@@ -510,9 +510,41 @@ INT64 Manager::GetMemberFromChatRoom(const std::wstring &room_id,
   success = get_members(mgr, reinterpret_cast<UINT64>(&chat_room_id), addr);
   member.chat_room_id = Utils::ReadWstringThenConvert(addr + 0x10);        
   member.admin = Utils::ReadWstringThenConvert(addr + 0x78);        
-  member.member_nickname = Utils::ReadWstringThenConvert(addr + 0x50);        
   member.admin_nickname = Utils::ReadWstringThenConvert(addr + 0xA0);        
   member.member = Utils::ReadWeChatStr(addr + 0x30);   
+  
+  if (member.admin_nickname.empty() && !member.admin.empty()) {
+    common::ContactProfileInner admin_contact;
+    if (GetContactByWxid(Utils::UTF8ToWstring(member.admin), admin_contact) == 1) {
+      member.admin_nickname = admin_contact.nickname;
+    }
+  }
+  
+  std::string full_nicknames = "";
+  std::string members_str = member.member;
+  if (!members_str.empty()) {
+    std::vector<std::string> member_wxids;
+    std::string delim = "^G";
+    size_t start = 0;
+    size_t end = members_str.find(delim);
+    while (end != std::string::npos) {
+      member_wxids.push_back(members_str.substr(start, end - start));
+      start = end + delim.length();
+      end = members_str.find(delim, start);
+    }
+    member_wxids.push_back(members_str.substr(start));
+
+    for (size_t i = 0; i < member_wxids.size(); ++i) {
+      common::ContactProfileInner contact;
+      if (GetContactByWxid(Utils::UTF8ToWstring(member_wxids[i]), contact) == 1) {
+        full_nicknames += contact.nickname;
+      }
+      if (i < member_wxids.size() - 1) {
+        full_nicknames += "^G";
+      }
+    }
+  }
+  member.member_nickname = full_nicknames;
   free_chat_room(addr);
   return success;     
 }
