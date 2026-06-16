@@ -1,4 +1,4 @@
-﻿
+
 #include "pch.h"
 #include "hooks.h"
 #include "thread_pool.h"
@@ -310,7 +310,49 @@ int UnHookSyncMsg() {
     kLogHookFlag = false;
   }
   return ret;
- }
+}
+
+bool g_anti_revoke_enabled = false;
+
+static wxhelper::V3_9_5_81::function::__RevokeMsg g_original_revoke_msg = nullptr;
+
+char __fastcall HookRevokeMsgFunc(UINT64 a1, UINT64 a2) {
+  if (g_anti_revoke_enabled) {
+    return 1;
+  }
+  if (g_original_revoke_msg) {
+    return g_original_revoke_msg(a1, a2);
+  }
+  return 0;
+}
+
+int HookAntiRevoke(bool enable) {
+  g_anti_revoke_enabled = enable;
+  UINT64 base = Utils::GetWeChatWinBase();
+  UINT64 revoke_addr = base + offset::kRevokeMsg;
+  
+  if (enable) {
+    if (!g_original_revoke_msg) {
+      g_original_revoke_msg = (wxhelper::V3_9_5_81::function::__RevokeMsg)revoke_addr;
+      DetourTransactionBegin();
+      DetourUpdateThread(GetCurrentThread());
+      DetourAttach(&(PVOID&)g_original_revoke_msg, &HookRevokeMsgFunc);
+      if (DetourTransactionCommit() != NO_ERROR) {
+        g_original_revoke_msg = nullptr;
+        return -1;
+      }
+    }
+  } else {
+    if (g_original_revoke_msg) {
+      DetourTransactionBegin();
+      DetourUpdateThread(GetCurrentThread());
+      DetourDetach(&(PVOID&)g_original_revoke_msg, &HookRevokeMsgFunc);
+      DetourTransactionCommit();
+      g_original_revoke_msg = nullptr;
+    }
+  }
+  return 0;
+}
 
 }  // namespace hooks
 }  // namespace wxhelper

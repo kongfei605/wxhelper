@@ -1,4 +1,4 @@
-﻿#ifndef WXHELPER_MANAGER_H_
+#ifndef WXHELPER_MANAGER_H_
 #define WXHELPER_MANAGER_H_
 #include "Windows.h"
 #include "wechat_function.h"
@@ -32,6 +32,7 @@ class Manager {
   INT64 CreateChatRoom(const std::vector<std::wstring>& wxids);
   INT64 QuitChatRoom(const std::wstring& room_id);
   INT64 ForwardMsg(UINT64 msg_id, const std::wstring& wxid);
+  INT64 SendXmlMsg(const std::wstring& wxid, const std::wstring& xml, const std::wstring& path, INT32 type);
   INT64 GetSNSFirstPage();
   INT64 GetSNSNextPage(UINT64 sns_id);
   INT64 AddFavFromMsg(UINT64 msg_id);

@@ -444,6 +444,13 @@ std::string HttpDispatch(struct mg_connection *c, struct mg_http_message *hm) {
         {"code", success}, {"msg", "success"}, {"data", {}}};
     ret = ret_data.dump();
     return ret;
+  } else if (mg_http_match_uri(hm, "/api/antiRevoke")) {
+    int enable = GetIntParam(j_param, "enable");
+    int success = wxhelper::hooks::HookAntiRevoke(enable != 0);
+    nlohmann::json ret_data = {
+        {"code", success}, {"msg", "success"}, {"data", {}}};
+    ret = ret_data.dump();
+    return ret;
   } else if (mg_http_match_uri(hm, "/api/hookLog")) {
     int success = wxhelper::hooks::HookLog();
     nlohmann::json ret_data = {
@@ -622,7 +629,26 @@ std::string HttpDispatch(struct mg_connection *c, struct mg_http_message *hm) {
         wxid, waid_concat, waid_w, waid, app_wxid, json_param, head_url,
         main_img, index_page);
     nlohmann::json ret_data = {
-        {"code", success}, {"msg", "success"}, {"data", {}}};
+        {"code", success > 0 ? 1 : 0},
+        {"msg", success > 0 ? "success" : "fail"},
+    };
+    ret = ret_data.dump();
+    return ret;
+ } else if (mg_http_match_uri(hm, "/api/sendXmlMsg")) {
+    std::wstring wxid = GetWStringParam(j_param, "wxid");
+    std::wstring xml = GetWStringParam(j_param, "xml");
+    std::wstring path = GetWStringParam(j_param, "path");
+    int type = GetIntParam(j_param, "type");
+    if (type == 0) {
+        type = 33; // Default to 33, app msg
+    }
+
+    INT64 success = wxhelper::GlobalContext::GetInstance().mgr->SendXmlMsg(
+        wxid, xml, path, type);
+    nlohmann::json ret_data = {
+        {"code", success > 0 ? 1 : 0},
+        {"msg", success > 0 ? "success" : "fail"},
+    };
     ret = ret_data.dump();
     return ret;
  } else if (mg_http_match_uri(hm, "/api/sendPatMsg")) {

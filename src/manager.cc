@@ -780,6 +780,53 @@ INT64 Manager::SendAtText(const std::wstring &room_id,
   return success;
 }
 
+INT64 Manager::SendXmlMsg(const std::wstring& wxid, const std::wstring& xml, const std::wstring& path, INT32 type) {
+  INT64 success = -1;
+  common::SelfInfoInner self_info;
+  GetSelfInfo(self_info);
+  std::wstring self_wxid = Utils::UTF8ToWstring(self_info.wxid);
+
+  prototype::WeChatString to_user(wxid);
+  prototype::WeChatString body(xml);
+  prototype::WeChatString thumb(path);
+  prototype::WeChatString from(self_wxid);
+
+  UINT64 new_chat_msg_addr = base_addr_ + offset::kChatMsgInstanceCounter;
+  UINT64 free_chat_msg_addr = base_addr_ + offset::kFreeChatMsg;
+  UINT64 send_xml_msg_addr = base_addr_ + offset::kSendXmlMsg;
+  UINT64 xml_buf_sign_addr = base_addr_ + offset::kXmlBufSign;
+
+  func::__NewChatMsg new_chat_msg = (func::__NewChatMsg)new_chat_msg_addr;
+  func::__FreeChatMsg free_chat_msg = (func::__FreeChatMsg)free_chat_msg_addr;
+  func::__SendXmlMsg send_xml = (func::__SendXmlMsg)send_xml_msg_addr;
+  func::__XmlBufSign xml_buf_sign = (func::__XmlBufSign)xml_buf_sign_addr;
+
+  char buff1[0x500] = {0};
+  char buff2[0x500] = {0};
+  char buff3[0x1C]  = {0};
+
+  new_chat_msg(reinterpret_cast<UINT64>(&buff1));
+  new_chat_msg(reinterpret_cast<UINT64>(&buff2));
+
+  UINT64 array[4] = {0};
+  UINT64 sign = xml_buf_sign(reinterpret_cast<UINT64>(&buff2), reinterpret_cast<UINT64>(&array), 1);
+
+  send_xml(reinterpret_cast<UINT64>(&buff1), 
+           reinterpret_cast<UINT64>(&from),
+           reinterpret_cast<UINT64>(&to_user),
+           reinterpret_cast<UINT64>(&body),
+           reinterpret_cast<UINT64>(&thumb),
+           reinterpret_cast<UINT64>(&buff3),
+           type, 0x4, sign, 
+           reinterpret_cast<UINT64>(&buff2));
+
+  free_chat_msg(reinterpret_cast<UINT64>(&buff1));
+  free_chat_msg(reinterpret_cast<UINT64>(&buff2));
+
+  success = 1;
+  return success;
+}
+
 std::wstring Manager::GetContactOrChatRoomNickname(const std::wstring &wxid) {
   prototype::WeChatString to_user(wxid);
   UINT64 get_contact_mgr_addr = base_addr_ + offset::kGetContactMgr;

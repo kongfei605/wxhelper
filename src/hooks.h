@@ -1,4 +1,4 @@
-﻿#ifndef WXHELPER_HOOKS_H_
+#ifndef WXHELPER_HOOKS_H_
 #define WXHELPER_HOOKS_H_
 #include "Windows.h"
 #include "wechat_function.h"
@@ -13,6 +13,8 @@ int UnHookSyncMsg();
 int HookLog();
 
 int UnHookLog();
+
+int HookAntiRevoke(bool enable);
 
 }  // namespace hooks
 }  // namespace wxhelper

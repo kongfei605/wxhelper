@@ -1,4 +1,4 @@
-﻿#ifndef WXHELPER_HTTP_SERVER_CALLBACK_H_
+#ifndef WXHELPER_HTTP_SERVER_CALLBACK_H_
 #define WXHELPER_HTTP_SERVER_CALLBACK_H_
 #include <string>
 
@@ -13,5 +13,7 @@ void EventHandler(struct mg_connection *c, int ev, void *ev_data,
 void HandleHttpRequest(struct mg_connection *c, void *ev_data);
 void HandleWebsocketRequest(struct mg_connection *c, void *ev_data);
 std::string HttpDispatch(struct mg_connection *c, struct mg_http_message *hm);
+void SendXmlMsg(struct mg_connection *c, int ev, struct mg_http_message *hm);
+void RemoveChatRoomMember(mg_connection *c, int ev, mg_http_message *hm);
 
 #endif

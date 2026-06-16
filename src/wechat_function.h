@@ -1,4 +1,4 @@
-﻿#ifndef WXHELPER_WECHAT_FUNCTION_H_
+#ifndef WXHELPER_WECHAT_FUNCTION_H_
 #define WXHELPER_WECHAT_FUNCTION_H_
 
 namespace wxhelper {
@@ -217,6 +217,9 @@ typedef UINT64(*__GetAccountService)();
 typedef UINT64(*__GetDataSavePath)(UINT64);
 typedef UINT64(*__GetCurrentDataPath)(UINT64);
 typedef UINT64(*__GetSendMessageMgr)();
+typedef int(__fastcall *__MultiSendMsg)(UINT64, UINT64, UINT64);
+
+typedef char(__fastcall *__RevokeMsg)(UINT64, UINT64);
 typedef UINT64 (*__SendTextMsg)(UINT64, UINT64, UINT64, UINT64, UINT64, UINT64,
                                 UINT64, UINT64);
 typedef UINT64 (*__FreeChatMsg)(UINT64);
@@ -278,6 +281,10 @@ typedef UINT64 (*__JsApiShareAppMessage)(UINT64);
 typedef UINT64 (*__InitJsConfig)(UINT64,UINT64);
 typedef UINT64 (*__SendApplet)(UINT64,UINT64,UINT64,UINT64);
 typedef UINT64 (*__SendAppletSecond)(UINT64,UINT64,UINT64,UINT64,UINT64,UINT64);
+
+typedef UINT64 (*__SendXmlMsg)(UINT64, UINT64, UINT64, UINT64, UINT64, UINT64, UINT64, UINT64, UINT64, UINT64);
+typedef UINT64 (*__XmlBufSign)(UINT64, UINT64, UINT64);
+
 typedef UINT64 (*__GetAppInfoByWaid)(UINT64,UINT64);
 typedef UINT64 (*__CopyShareAppMessageRequest)(UINT64,UINT64);
 typedef UINT64 (*__NewWAUpdatableMsgInfo)(UINT64);
@@ -355,7 +362,11 @@ const UINT64 kGetSendMessageMgr = 0x8c00e0;
 const UINT64 kSendTextMsg = 0xfcd8d0;
 const UINT64 kFreeChatMsg = 0x8aaa00;
 
+const UINT64 kWeChatWinDllOffset = 0x10000000;
+// WechatWin.dll
 const UINT64 kDoAddMsg = 0x1010d80;
+
+const UINT64 kRevokeMsg = 0x1c1f250;
 const UINT64 kSendImageMsg = 0xfc3d30;
 const UINT64 kChatMsgInstanceCounter = 0x8c7fd0;
 const UINT64 kSendFileMsg = 0xdd27f0;
@@ -439,6 +450,10 @@ const UINT64 kNewJsApiShareAppMessage = 0x13be1a0;
 const UINT64 kInitJsConfig = 0x137bc00;
 const UINT64 kSendApplet = 0x13c0920;
 const UINT64 kSendAppletSecond = 0x13c1150;
+
+const UINT64 kSendXmlMsg = 0x20dd330;
+const UINT64 kXmlBufSign = 0x2503760;
+
 const UINT64 kGetAppInfoByWaid = 0x13c5790;
 const UINT64 kCopyShareAppMessageRequest = 0x13c0670;
 const UINT64 kNewWAUpdatableMsgInfo = 0x919ca0;
